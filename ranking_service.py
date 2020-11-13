@@ -14,6 +14,7 @@ class RankingService:
     uis_rpc = RpcProxy('uis')
     event_das_rpc = RpcProxy('event_das')
     auth_rpc = RpcProxy('auth')
+    logger_rpc = RpcProxy('logger')
 
     # Logic
 
@@ -54,6 +55,8 @@ class RankingService:
         принимает событие от event_das о добавлении новых мероприятий
         должен обновить топы для всех пользователей
         '''
+        self.logger_rpc.log(self.name, self.change_top_all.__name__, plug, "Info", "Updating from new events from event_das")
+
         user_ids = self.auth_rpc.get_all_logins()
         for user_id in user_ids:
             tags = self.uis_rpc.get_weights_by_id(user_id)
@@ -62,6 +65,7 @@ class RankingService:
     @rpc
     @event_handler("uis", "make_top")
     def change_top_user(self, data):
+        self.logger_rpc.log(self.name, self.change_top_user.__name__, data, "Info", "Changing user's top")
         events_tags = self.event_das_rpc.get_event_tags()
         top_events = self._change_top_user(data[0], data[1], events_tags)
         self.top_das_rpc.update_top(data[0], top_events)
